@@ -1,150 +1,94 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === 元素獲取 ===
-    const timeDisplay = document.getElementById('time-display');
-    const dateDisplay = document.getElementById('date-display');
+    // === 元素獲取 (無變動) ===
     const simulationTimeEl = document.getElementById('simulation-time');
-    // Core Status
     const coreStatusCard = document.getElementById('core-status-card');
     const characterIcon = document.getElementById('character-icon');
     const statusText = document.getElementById('status-text');
     const statusDetail = document.getElementById('status-detail');
-    // Vitals
-    const vitalsCard = document.getElementById('vitals-card');
     const vitalsMainStatus = document.getElementById('vitals-main-status');
     const vitalsHr = document.getElementById('vitals-hr');
     const vitalsBr = document.getElementById('vitals-br');
     const vitalsSleep = document.getElementById('vitals-sleep');
-    // Sleep
-    const sleepCard = document.getElementById('sleep-card');
     const sleepPresence = document.getElementById('sleep-presence');
     const sleepScore = document.getElementById('sleep-score');
     const sleepDuration = document.getElementById('sleep-duration');
     const sleepToss = document.getElementById('sleep-toss');
-    // Environment & Safety
     const envTemp = document.getElementById('env-temp');
     const envHumidity = document.getElementById('env-humidity');
     const doorStatus = document.getElementById('door-status');
     const smokeStatus = document.getElementById('smoke-status');
     const doorCard = document.getElementById('door-card');
-    const smokeCard = document.getElementById('smoke-card');
 
-
-    // === 模擬劇本與數據 ===
-    const mockData = [
-        { time: '02:30:00', sensor: 'BedSensor', on_bed: true, abnormal_vibration: false },
-        { time: '02:30:00', sensor: 'VitalSigns', hr: 62, br: 14, sleep_stage: '深睡', motion: '靜止' },
-        { time: '04:30:00', sensor: 'VitalSigns', hr: 65, br: 15, sleep_stage: '淺睡', motion: '靜止' },
-        { time: '04:32:00', sensor: 'BedSensor', toss_and_turn: 15 },
-        { time: '06:45:00', sensor: 'VitalSigns', hr: 70, br: 16, sleep_stage: '清醒', motion: '活動中' },
-        { time: '06:50:00', sensor: 'BedSensor', on_bed: false, sleep_duration: '7h 20m', sleep_score: 88 },
-        { time: '08:30:00', sensor: 'Environment', temp: 24, humidity: 60 },
-        { time: '08:50:55', sensor: 'VitalSigns', hr: 85, br: 20, motion: '活動中' },
-        { time: '08:51:02', sensor: 'VitalSigns', hr: 120, br: 25, motion: '跌倒' },
-        { time: '08:51:05', sensor: 'VitalSigns', hr: 115, br: 24, motion: '靜止' },
-        { time: '08:55:00', sensor: 'VitalSigns', hr: 110, br: 22, motion: '靜止' },
-    ];
-
-    let globalState = {
-        main_status: '初始化中...',
-        on_bed: false,
-        motion: '未知',
+    // === 新的 6 秒循環劇本 ===
+    const scenario = {
+        '06:45:00': { core: '睡眠中', detail: '偵測到深層睡眠', icon: '😴', on_bed: true, hr: 62, br: 12, sleep_stage: '深睡', motion: '靜止', door: '關閉' },
+        '06:46:00': { core: '活動中', detail: '開門拿取物品', icon: '🚪', on_bed: false, hr: 85, br: 19, sleep_stage: '非睡眠狀態', motion: '活動中', door: '開啟', sleep_score: 85, sleep_duration: '8h 2m' },
+        '06:47:00': { core: '活動中', detail: '已關門並走回室內', icon: '🚶‍♂️', on_bed: false, hr: 83, br: 18, motion: '活動中', door: '關閉' },
+        '06:48:00': { core: '緊急警報', detail: '偵測到使用者跌倒！', icon: '🚨', on_bed: false, hr: 125, br: 28, motion: '跌倒', alert: true },
+        '06:49:00': { core: '緊急警報', detail: '警報已持續1分鐘', icon: '🚨', on_bed: false, hr: 115, br: 25, motion: '跌倒', alert: true },
+        '06:50:00': { core: '急救處理中', detail: '已通知緊急聯絡人', icon: '🚑', on_bed: false, hr: 110, br: 22, motion: '跌倒', response: true }
     };
 
-    // === 更新 UI 的函式 ===
-    function updateClock() {
-        const now = new Date();
-        timeDisplay.textContent = now.toLocaleTimeString('en-GB');
-        dateDisplay.textContent = now.toISOString().split('T')[0];
-    }
+    // 將劇本的時間點轉換成陣列，方便索引
+    const timeKeys = Object.keys(scenario);
 
-    function updateCoreStatus() {
-        let icon, text, detail;
-        const motion = globalState.motion;
-        const on_bed = globalState.on_bed;
-
-        coreStatusCard.classList.remove('status-alert');
-
-        if (motion === '跌倒') {
-            icon = '🚨';
-            text = '緊急狀況';
-            detail = '偵測到使用者跌倒！';
+    function updateDashboard(data) {
+        // 更新核心狀態卡
+        statusText.textContent = data.core;
+        statusDetail.textContent = data.detail;
+        characterIcon.textContent = data.icon;
+        
+        // 更新核心狀態的視覺樣式
+        coreStatusCard.classList.remove('status-alert', 'status-response');
+        if (data.alert) {
             coreStatusCard.classList.add('status-alert');
-        } else if (on_bed) {
-            icon = '😴';
-            text = '睡眠中';
-            detail = '使用者在床上休息';
-        } else if (motion === '活動中') {
-            icon = '🚶‍♂️';
-            text = '活動中';
-            detail = '在室內偵測到活動';
-        } else if (motion === '靜止') {
-            icon = '🛋️';
-            text = '靜態休息';
-            detail = '使用者處於靜止狀態';
-        } else {
-            icon = '❓';
-            text = '未知';
-            detail = '等待感測器數據';
-        }
-        characterIcon.textContent = icon;
-        statusText.textContent = text;
-        statusDetail.textContent = detail;
-    }
-
-    function processData(data) {
-        simulationTimeEl.textContent = data.time;
-
-        if (data.sensor === 'VitalSigns') {
-            globalState.motion = data.motion;
-            vitalsHr.textContent = `${data.hr} bpm`;
-            vitalsBr.textContent = `${data.br} br/min`;
-            vitalsSleep.textContent = data.sleep_stage || '--';
-            
-            vitalsMainStatus.classList.remove('status-danger');
-            if (data.motion === '跌倒') {
-                vitalsMainStatus.textContent = '偵測到跌倒';
-                vitalsMainStatus.classList.add('status-danger');
-            } else {
-                vitalsMainStatus.textContent = data.motion;
-            }
+        } else if (data.response) {
+            coreStatusCard.classList.add('status-response');
         }
 
-        if (data.sensor === 'BedSensor') {
-            globalState.on_bed = data.on_bed;
-            sleepPresence.textContent = data.on_bed ? '在床' : '離床';
-            if (data.sleep_score) sleepScore.textContent = `${data.sleep_score} / 100`;
-            if (data.sleep_duration) sleepDuration.textContent = data.sleep_duration;
-            if (data.toss_and_turn) sleepToss.textContent = `${data.toss_and_turn} 次`;
-            
-            sleepCard.classList.remove('status-warn');
-            if(data.abnormal_vibration) {
-                 sleepPresence.textContent = "異常震動";
-                 sleepCard.classList.add('status-warn');
-            }
-        }
+        // 更新生命體徵卡
+        vitalsMainStatus.textContent = data.motion;
+        vitalsMainStatus.classList.toggle('status-danger', data.motion === '跌倒');
+        vitalsHr.textContent = `${data.hr} bpm`;
+        vitalsBr.textContent = `${data.br} br/min`;
+        vitalsSleep.textContent = data.sleep_stage;
 
-        if (data.sensor === 'Environment') {
-            envTemp.textContent = `${data.temp} °C`;
-            envHumidity.textContent = `${data.humidity} %`;
-        }
-
-        // 觸發核心狀態更新
-        updateCoreStatus();
+        // 更新睡眠卡
+        sleepPresence.textContent = data.on_bed ? '在床' : '離床';
+        sleepScore.textContent = data.sleep_score ? `${data.sleep_score} / 100` : '-- / 100';
+        sleepDuration.textContent = data.sleep_duration || '--';
+        
+        // 更新環境與安全卡
+        const isDoorClosed = data.door === '關閉';
+        doorStatus.textContent = data.door;
+        doorCard.querySelector('.main-value').className = isDoorClosed ? 'main-value status-ok' : 'main-value status-warn';
     }
     
-    // === 模擬器啟動 ===
-    async function runSimulation() {
-        // 先顯示一個初始的空狀態
-        processData({ time: '00:00:00' });
-        
-        for (const dataPoint of mockData) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 每個事件間隔2秒
-            processData(dataPoint);
-        }
-        statusDetail.textContent = '模擬結束。';
+    // === 無縫循環播放的模擬器 ===
+    function runSimulation() {
+        let stepIndex = 0;
+
+        setInterval(() => {
+            // 獲取當前步驟的時間和數據
+            const timeStr = timeKeys[stepIndex];
+            const data = scenario[timeStr];
+            
+            // 更新時間顯示和儀表板
+            simulationTimeEl.textContent = timeStr;
+            updateDashboard(data);
+
+            // 移動到下一個步驟，如果到底了就從頭開始
+            stepIndex = (stepIndex + 1) % timeKeys.length;
+            
+        }, 1000); // 每 1000ms (1秒) 播放一個步驟
     }
 
-    setInterval(updateClock, 1000);
-    updateClock();
+    // 初始化一些固定的顯示
+    envTemp.textContent = `24 °C`;
+    envHumidity.textContent = `62 %`;
+    smokeStatus.className = 'main-value status-ok';
+    smokeStatus.textContent = '正常';
+    
+    // 啟動模擬器
     runSimulation();
 });
