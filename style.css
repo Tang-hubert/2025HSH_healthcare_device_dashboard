@@ -18,7 +18,7 @@ body {
     color: var(--text-color);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
     padding: 24px;
     box-sizing: border-box;
@@ -27,8 +27,8 @@ body {
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: minmax(140px, auto);
-    gap: 16px;
+    grid-auto-rows: minmax(100px, auto);
+    gap: 20px;
     width: 100%;
     max-width: 1400px;
 }
@@ -36,85 +36,81 @@ body {
 .card {
     background-color: var(--card-bg-color);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
 }
 
-/* Grid spanning classes */
-.card-2x1 { grid-column: span 2; }
+.card-full-width { grid-column: 1 / -1; }
 .card-2x2 { grid-column: span 2; grid-row: span 2; }
 .card-1x1 { grid-column: span 1; }
 
-/* Specific Card Styles */
-.time-card {
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(45deg, #2173d1, var(--accent-color));
-    color: white;
-}
-#time-display { font-size: 3.5rem; font-weight: 700; line-height: 1; }
-#date-display { font-size: 1.2rem; opacity: 0.9; }
-
-.sim-time-card {
-    justify-content: center;
-    align-items: center;
+.time-banner {
+    grid-column: 1 / -1;
     text-align: center;
+    padding: 16px;
+    background: var(--card-bg-color);
 }
-.sim-time-card h3 { margin: 0 0 10px; color: var(--text-secondary-color); font-weight: 500; }
-.sim-time-card p { margin: 0; font-size: 2rem; font-weight: 700; color: var(--accent-color); }
-
+.time-banner h2 { margin: 0; font-size: 2rem; font-weight: 500; color: var(--accent-color); }
 
 #core-status-card {
+    grid-row: span 1;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: center;
+    gap: 15px;
+    min-height: 240px;
 }
-#character-icon { font-size: 5rem; line-height: 1; margin-bottom: 16px; }
-#status-text { margin: 0 0 8px 0; font-size: 1.8rem; font-weight: 700; }
-#status-detail { margin: 0; color: var(--text-secondary-color); min-height: 1.2em; }
+#character-icon { font-size: 7rem; line-height: 1; }
+.status-content { text-align: center; }
+#status-text { margin: 0 0 10px 0; font-size: 3rem; font-weight: 700; }
+#status-detail { margin: 0; font-size: 1.4rem; color: var(--text-secondary-color); }
+
+/* == 核心狀態顏色管理 == */
 #core-status-card.status-alert {
     background-color: var(--danger-color);
+    animation: pulse-red 1.2s infinite;
+}
+/* 新增：急救處理中狀態 */
+#core-status-card.status-response {
+    background-color: var(--accent-color);
+    animation: pulse-blue 1.5s infinite;
+}
+#core-status-card.status-alert #status-text,
+#core-status-card.status-alert #status-detail,
+#core-status-card.status-response #status-text,
+#core-status-card.status-response #status-detail {
     color: white;
-    animation: pulse 1.2s infinite;
 }
 
-.card-title { margin: 0 0 auto 0; font-weight: 500; color: var(--text-secondary-color); }
-.card-title-small { margin: 0 0 auto 0; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary-color); }
-.main-value { font-size: 2rem; font-weight: 700; margin: auto 0 0; text-align: right; }
 
-/* Vitals Card */
-#vitals-card { justify-content: flex-start; }
-.vitals-status { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
-.vitals-grid { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; width: 100%; margin-top: auto; }
-.vitals-value { font-weight: 700; text-align: right; }
+.card-title { margin: 0 0 auto 0; font-size: 1.25rem; font-weight: 700; color: var(--text-secondary-color); }
+.main-value { font-size: 2.2rem; font-weight: 700; margin: auto 0 0; text-align: right; }
+#vitals-card, #sleep-card { min-height: 300px; justify-content: flex-start; }
+.vitals-status { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center; }
+.vitals-grid, .sleep-grid { display: grid; grid-template-columns: auto 1fr; gap: 16px; width: 100%; margin-top: auto; font-size: 1.1rem; }
+.vitals-value, .sleep-grid > div:nth-child(even) { font-weight: 700; text-align: right; }
 .vitals-status.status-danger { color: var(--danger-color); }
-
-/* Sleep Card */
-#sleep-card { justify-content: flex-start; }
-.sleep-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; width: 100%; margin-top: auto; }
-#sleep-card.status-warn { background-color: #3e321a; }
-
-/* Status Colors for simple cards */
 .status-ok { color: var(--success-color); }
 .status-warn { color: var(--warning-color); }
 .status-danger { color: var(--danger-color); }
 
-@keyframes pulse {
+/* == 動畫定義 == */
+@keyframes pulse-red {
     0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.6); }
-    70% { box-shadow: 0 0 0 15px rgba(248, 81, 73, 0); }
+    70% { box-shadow: 0 0 0 20px rgba(248, 81, 73, 0); }
     100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); }
 }
+/* 新增：藍色脈衝動畫 */
+@keyframes pulse-blue {
+    0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(88, 166, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+}
 
-@media (max-width: 1200px) {
-    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-    .card-2x1, .card-1x1 { grid-column: span 1; }
-    .card-2x2 { grid-column: span 2; grid-row: span 1; min-height: 250px;}
-}
-@media (max-width: 768px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
-    .card-2x2 { grid-column: span 1; }
-}
+@media (max-width: 1200px) { .card-2x2 { grid-column: span 2; } }
+@media (max-width: 900px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } .card-1x1 { grid-column: span 1; } .card-2x2 { grid-column: span 2; grid-row: span 1; min-height: auto; } }
+@media (max-width: 600px) { .dashboard-grid { grid-template-columns: 1fr; } .card-1x1, .card-2x2 { grid-column: span 1; } }
