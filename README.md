@@ -1,0 +1,2 @@
+# 2025HSH_healthcare_device_dashboard
+simulation data
