@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年長者智慧照護儀錶板 (Pro 模擬版)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="dashboard-grid">
+        <!-- 主要時間卡片 (2x1) -->
+        <div class="card card-2x1 time-card">
+            <div id="time-display">00:00:00</div>
+            <div id="date-display">YYYY-MM-DD</div>
+        </div>
+
+        <!-- 模擬時間戳 -->
+        <div class="card card-2x1 sim-time-card">
+            <h3>模擬事件時間</h3>
+            <p id="simulation-time">00:00:00</p>
+        </div>
+
+        <!-- 核心狀態卡片 (2x2) -->
+        <div id="core-status-card" class="card card-2x2">
+            <div id="character-icon"></div>
+            <h2 id="status-text">初始化中...</h2>
+            <p id="status-detail">等待感測器數據...</p>
+        </div>
+        
+        <!-- 生命體徵卡片 (2x2) - 微米波雷達 -->
+        <div id="vitals-card" class="card card-2x2">
+            <h3 class="card-title">生命體徵 (微米波雷達)</h3>
+            <div id="vitals-main-status" class="vitals-status">--</div>
+            <div class="vitals-grid">
+                <div>❤️ 心率</div>
+                <div id="vitals-hr" class="vitals-value">-- bpm</div>
+                <div>🫁 呼吸</div>
+                <div id="vitals-br" class="vitals-value">-- br/min</div>
+                <div>🛌 睡眠階段</div>
+                <div id="vitals-sleep" class="vitals-value">--</div>
+            </div>
+        </div>
+        
+        <!-- 睡眠品質卡片 (2x1) - 床底檢測器 -->
+        <div id="sleep-card" class="card card-2x1">
+            <h3 class="card-title">睡眠品質 (床底檢測器)</h3>
+            <div class="sleep-grid">
+                <div>狀態</div><div id="sleep-presence">--</div>
+                <div>睡眠分數</div><div id="sleep-score">-- / 100</div>
+                <div>時長</div><div id="sleep-duration">--</div>
+                <div>翻身</div><div id="sleep-toss">-- 次</div>
+            </div>
+        </div>
+        
+        <!-- 環境與安全卡片 -->
+        <div class="card card-1x1">
+            <h3 class="card-title-small">🌡️ 溫度</h3>
+            <p id="env-temp" class="main-value">-- °C</p>
+        </div>
+        <div class="card card-1x1">
+            <h3 class="card-title-small">💧 濕度</h3>
+            <p id="env-humidity" class="main-value">-- %</p>
+        </div>
+        <div id="door-card" class="card card-1x1">
+            <h3 class="card-title-small">🚪 前門</h3>
+            <p id="door-status" class="main-value">--</p>
+        </div>
+        <div id="smoke-card" class="card card-1x1">
+            <h3 class="card-title-small">💨 煙霧/瓦斯</h3>
+            <p id="smoke-status" class="main-value">--</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
